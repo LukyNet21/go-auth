@@ -25,9 +25,13 @@ func NewAuthService(s Store, h PasswordHasher, t TokenProvider) *AuthService {
 	}
 }
 
-// RegisterWithPassword registers new user using email and password.
-func (s *AuthService) RegisterWithPassword(ctx context.Context, email, password string) (*models.User, error) {
-	if email == "" || password == "" {
+func (s *AuthService) TokenProvider() TokenProvider {
+	return s.tokenProvider
+}
+
+// RegisterWithPassword registers new user using email, username and password.
+func (s *AuthService) RegisterWithPassword(ctx context.Context, email, username, password string) (*models.User, error) {
+	if email == "" || username == "" || password == "" {
 		return nil, models.ErrInvalidCredentials
 	}
 
@@ -51,6 +55,7 @@ func (s *AuthService) RegisterWithPassword(ctx context.Context, email, password 
 	u := models.User{
 		ID:        userID,
 		Email:     email,
+		Username:  username,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -190,6 +195,11 @@ func (s *AuthService) ChangePassword(ctx context.Context, userID, oldPassword, n
 	}
 
 	return nil
+}
+
+// GetUser returns the user with the given ID.
+func (s *AuthService) GetUser(ctx context.Context, userID string) (*models.User, error) {
+	return s.store.GetUserByID(ctx, userID)
 }
 
 func (s *AuthService) LogoutAll(ctx context.Context, userID string) error {
